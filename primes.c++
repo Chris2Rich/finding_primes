@@ -15,29 +15,44 @@ void handle_signal(int signum) {
 }
 
 //checks all primes, if any found, stop checking
-__global__ void td_check_prime(uint64_t* primes, uint64_t candidate, int N, bool* found_flag) {
+__global__ void td_check_prime(uint64_t* primes, uint64_t candidate, uint64_t start_index, uint64_t chunk_size, bool* found_flag) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < N) {
-        if (*found_flag){
-            return;
-        }
+    int global_idx = start_index + idx;
 
-        if (candidate % primes[idx] == 0){
-            atomicExch(found_flag, true);
-            return;
+    __shared__ bool local_found_flag;
+
+    if (threadIdx.x == 0) {
+        local_found_flag = false;
+    }
+    __syncthreads();
+
+    if (!local_found_flag && global_idx < start_index + chunk_size) {
+        if (candidate % primes[global_idx] == 0) {
+            if (atomicExch(&local_found_flag, true) == false) {
+                atomicExch(found_flag, true);
+            }
         }
+    }
+
+    __syncthreads();
+
+    if (local_found_flag) {
+        return;
     }
 }
 
 void trial_division(){
     std::vector<uint64_t> primes(100);
     primes[0] = 2;
+    uint64_t candidate = 3;
     while(running){
-        if (){
+        bool found_flag = false;
 
-        } else {
-            final_value = number
+        if (found_flag){
+            primes.push_back()
+            final_value = candidate
         }
+        candidate++;
     }
 }
 

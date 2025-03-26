@@ -20,7 +20,7 @@ void start_child() {
 
 void kill_child() {
     if (child_pid > 0) {
-        kill(child_pid, SIGINT);
+        kill(child_pid, SIGTERM);
         waitpid(child_pid, nullptr, 0);
     }
 }
