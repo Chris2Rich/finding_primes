@@ -15,28 +15,28 @@ void handle_signal(int signum) {
 }
 
 //checks all primes, if any found, stop checking
-__global__ void td_check_prime(uint64_t* primes, uint64_t candidate, uint64_t start_index, uint64_t chunk_size, bool* found_flag) {
+__global__ void td_check_prime(uint64_t* primes, uint64_t candidate, uint64_t start_index, uint64_t chunk_size, int* found_flag) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int global_idx = start_index + idx;
 
-    __shared__ bool local_found_flag;
+    __shared__ int local_found_flag;
 
     if (threadIdx.x == 0) {
         local_found_flag = false;
     }
     __syncthreads();
 
-    if (!local_found_flag && global_idx < start_index + chunk_size) {
+    if (local_found_flag == 0 && global_idx < start_index + chunk_size) {
         if (candidate % primes[global_idx] == 0) {
-            if (atomicExch(&local_found_flag, true) == false) {
-                atomicExch(found_flag, true);
+            if (atomicExch(&local_found_flag, 1) == false) {
+                atomicExch(found_flag, 1);
             }
         }
     }
 
     __syncthreads();
 
-    if (local_found_flag) {
+    if (local_found_flag != 0) {
         return;
     }
 }
@@ -46,11 +46,11 @@ void trial_division(){
     primes[0] = 2;
     uint64_t candidate = 3;
     while(running){
-        bool found_flag = false;
-
-        if (found_flag){
-            primes.push_back()
-            final_value = candidate
+        int found_flag = 0;
+        td_check_prime(primes.data(), candidate, 0, 128, &found_flag);
+        if (found_flag != 0){
+            primes.push_back();
+            final_value = candidate;
         }
         candidate++;
     }
