@@ -174,6 +174,9 @@ void test_trial_division_naive_wheel(int n, int wheel){
 
 int main(){
     // test_trial_division_naive(8);
-    test_trial_division_naive_wheel(8, 8);
+    // for(int i = 0; i <= 8; i++){
+    //     test_trial_division_naive_wheel(8, i);
+    // }
+    
     return 0;
 }
