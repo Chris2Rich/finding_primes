@@ -166,8 +166,18 @@ void test_trial_division_wheel(uint64_t n, uint64_t wheel){
     return;
 }
 
-uint64_t expmod(uint64_t base, uint64_t exponent, uint64_t mod){
-
+uint64_t expmod(uint64_t x, uint64_t n, uint64_t m){
+    if(n == 0){return 1;}
+    uint64_t y = 1;
+    while(n > 1){
+        if(n & 1){
+            y = __uint128_t(x * y) % m;
+            n -= 1;
+        }
+        x = __uint128_t(x * x) % m;
+        n >>= 1;
+    }
+    return __uint128_t(x * y) % m;
 }
 
 bool miller_rabin_logic(uint64_t candidate, uint64_t s, uint64_t d, uint64_t k, std::mt19937_64 gen, std::uniform_int_distribution<uint64_t> dis){
@@ -189,23 +199,27 @@ bool miller_rabin_logic(uint64_t candidate, uint64_t s, uint64_t d, uint64_t k, 
     return true;
 }
 
+//implemented such that if the last value returned is correct, every preceeding number is correct
+// as there are no false negatives and a false positive would change the last number due to an early return
 std::vector<uint64_t> miller_rabin_naive(uint64_t size, uint64_t k, uint64_t* time){
 
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<uint64_t> dis;
-    std::vector<uint64_t> primes = {2};
+    std::vector<uint64_t> primes = {2,3};
+    primes.reserve(size);
 
     auto start_time = std::chrono::high_resolution_clock::now();
-    uint64_t candidate = 3;
+    uint64_t candidate = 5;
 
-    while(candidate <= size){
-        uint64_t s = __builtin_ctzll(candidate);
-        uint64_t d = candidate / s;
+    while(primes.size() < size){
+        uint64_t s = __builtin_ctzll(candidate - 1);
+        uint64_t d = (candidate - 1) >> s;
 
         if(miller_rabin_logic(candidate, s, d, k, gen , dis)){
             primes.emplace_back(candidate);
         }
+
         candidate += 2;
     }
 
@@ -215,14 +229,173 @@ std::vector<uint64_t> miller_rabin_naive(uint64_t size, uint64_t k, uint64_t* ti
     return primes;
 }
 
+void test_miller_rabin_naive(uint64_t n){
+    std::vector<uint64_t> f(n);
+    std::vector<uint64_t> t(n);
+    std::ofstream outfile("results/miller_rabin_naive.csv");
+
+    outfile << "first n primes,";
+    for(uint64_t i = 0; i < 10; i++){
+        outfile << i << ", ";
+    }
+    outfile << "\n";
+
+    for(uint64_t i = 1; i < n; i++){
+        outfile << "10^" << i << ",";
+        for(uint64_t j = 0; j < 10; j++){
+            //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
+            // total generated is 111111110
+            //k = ln(0.001 * (1/111111110))/ln(1/4) = 18.34 rounds
+            miller_rabin_naive(uint64_t(pow(10, i)), 19, &t[i]);
+            std::cout << "Time: " << t[i] << "us" << std::endl;
+            outfile << t[i] << ",";
+        }
+
+        outfile << std::endl;
+    }
+    return;
+}
+
+std::vector<uint64_t> miller_rabin_wheel(uint64_t size, uint64_t k, uint64_t wheel_size, uint64_t* time){
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<uint64_t> dis;
+
+    wheel_return_t wheeldata = generate_wheel_steps(wheel_size);
+    std::vector<uint64_t> primes = wheeldata.primes;
+    std::vector<uint64_t> wheel_steps = wheeldata.wheel_steps;
+    uint64_t candidate = wheeldata.candidate;
+    
+    primes.reserve(size);
+    size_t wheel_index = 0;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    while(primes.size() < size){
+        uint64_t s = __builtin_ctzll(candidate - 1);
+        uint64_t d = (candidate - 1) >> s;
+
+        if(miller_rabin_logic(candidate, s, d, k, gen , dis)){
+            primes.emplace_back(candidate);
+        }
+                
+        candidate += wheel_steps[wheel_index];
+        wheel_index = (wheel_index + 1) % wheel_steps.size();
+    }
+
+    int64_t duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+
+    if(time){*time = duration;}
+    return primes;
+}
+
+void test_miller_rabin_wheel(uint64_t n, uint64_t wheel_size){
+    std::vector<uint64_t> f(n);
+    std::vector<uint64_t> t(n);
+    std::ofstream outfile("results/miller_rabin_wheel.csv");
+
+    outfile << "first n primes,";
+    for(uint64_t i = 0; i < 10; i++){
+        outfile << i << ", ";
+    }
+    outfile << "\n";
+
+    for(uint64_t i = 1; i < n; i++){
+        outfile << "10^" << i << ",";
+        for(uint64_t j = 0; j < 10; j++){
+            //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
+            // total generated is 111111110
+            //k = ln(0.001 * (1/111111110))/ln(1/4) = 18.34 rounds
+            miller_rabin_wheel(uint64_t(pow(10, i)), 19, wheel_size, &t[i]);
+            std::cout << "Time: " << t[i] << "us" << std::endl;
+            outfile << t[i] << ",";
+        }
+
+        outfile << std::endl;
+    }
+    return;
+}
+
+bool miller_rabin_logic_optimized(uint64_t candidate, uint64_t s, uint64_t d){
+    std::vector<uint64_t> bases = {2, 3, 5, 7, 11, 13, 17};
+    for(uint64_t i = 0; i < 7; i++){
+        uint64_t a = bases[i];
+        uint64_t x = expmod(a, d, candidate);
+        uint64_t y = 0;
+        for(int64_t j = 0; j < s; j++){
+            y = __uint128_t(x*x) % candidate;
+            if(y == 1 && x != 1 && x != (candidate - 1)){
+                return false;
+            }
+            x = y;
+        }
+        if(y != 1){
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<uint64_t> miller_rabin_wheel_optimized(uint64_t size, uint64_t wheel_size, uint64_t* time){
+    wheel_return_t wheeldata = generate_wheel_steps(wheel_size);
+    std::vector<uint64_t> primes = wheeldata.primes;
+    std::vector<uint64_t> wheel_steps = wheeldata.wheel_steps;
+    uint64_t candidate = wheeldata.candidate;
+    
+    primes.reserve(size);
+    size_t wheel_index = 0;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    while(primes.size() < size){
+        uint64_t s = __builtin_ctzll(candidate - 1);
+        uint64_t d = (candidate - 1) >> s;
+
+        if(miller_rabin_logic_optimized(candidate, s, d)){
+            primes.emplace_back(candidate);
+        }
+                
+        candidate += wheel_steps[wheel_index];
+        wheel_index = (wheel_index + 1) % wheel_steps.size();
+    }
+
+    int64_t duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+
+    if(time){*time = duration;}
+    return primes;
+}
+
+void test_miller_rabin_wheel_optimized(uint64_t n, uint64_t wheel_size){
+    std::vector<uint64_t> f(n);
+    std::vector<uint64_t> t(n);
+    std::ofstream outfile("results/miller_rabin_wheel_optimized.csv");
+
+    outfile << "first n primes,";
+    for(uint64_t i = 0; i < 10; i++){
+        outfile << i << ", ";
+    }
+    outfile << "\n";
+
+    for(uint64_t i = 1; i < n; i++){
+        outfile << "10^" << i << ",";
+        for(uint64_t j = 0; j < 10; j++){
+            miller_rabin_wheel_optimized(uint64_t(pow(10, i)), wheel_size, &t[i]);
+            std::cout << "Time: " << t[i] << "us" << std::endl;
+            outfile << t[i] << ",";
+        }
+
+        outfile << std::endl;
+    }
+    return;
+}
+
 int main(){
     // test_trial_division_naive(8);
     // for(uint64_t i = 0; i <= 8; i++){
     //     test_trial_division_wheel(8, i);
     // }
-    std::vector<uint64_t> res = miller_rabin_naive(8, 10, nullptr);
-    for(auto x: res){
-        std::cout << x << "\n";
-    }
+    // test_miller_rabin_naive(8);
+    // test_miller_rabin_wheel(8, 6);
+    test_miller_rabin_wheel_optimized(8, 6);
     return 0;
 }
