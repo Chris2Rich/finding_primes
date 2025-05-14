@@ -1,4 +1,5 @@
 #include <vector>
+#include <random> 
 #include <cstdint>
 #include <cmath>
 #include <chrono>
@@ -6,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-std::vector<uint64_t> trial_division_naive(int size, uint64_t* time) {
+std::vector<uint64_t> trial_division_naive(uint64_t size, uint64_t* time) {
     std::vector<uint64_t> primes;
     primes.reserve(size);
     primes.push_back(2);
@@ -39,21 +40,21 @@ std::vector<uint64_t> trial_division_naive(int size, uint64_t* time) {
     return primes;
 }
 
-void test_trial_division_naive(int n){
+void test_trial_division_naive(uint64_t n){
     std::vector<uint64_t> f(n);
     std::vector<uint64_t> t(n);
     std::ofstream outfile("results/trial_division_naive.csv");
 
     outfile << "first n primes,";
-    for(int i = 0; i < 10; i++){
+    for(uint64_t i = 0; i < 10; i++){
         outfile << i << ", ";
     }
     outfile << "\n";
 
-    for(int i = 0; i < n; i++){
+    for(uint64_t i = 0; i < n; i++){
         outfile << "10^" << i << ",";
-        for(int j = 0; j < 10; j++){
-            trial_division_naive(int(pow(10, i)), &t[i]);
+        for(uint64_t j = 0; j < 10; j++){
+            trial_division_naive(uint64_t(pow(10, i)), &t[i]);
             std::cout << "Time: " << t[i] << "us" << std::endl;
             outfile << t[i] << ",";
         }
@@ -76,7 +77,7 @@ struct wheel_return_t{
     }
 };
 
-wheel_return_t generate_wheel_steps(int wheel_size) {
+wheel_return_t generate_wheel_steps(uint64_t wheel_size) {
     std::vector<uint64_t> primes = trial_division_naive(wheel_size + 1, nullptr);
     uint64_t last = primes.back();
     primes.pop_back();
@@ -108,7 +109,7 @@ wheel_return_t generate_wheel_steps(int wheel_size) {
     return wheel_return_t(steps, primes, last);
 }
 
-std::vector<uint64_t> trial_division_naive_wheel(int size, int wheel_size, uint64_t* time) {
+std::vector<uint64_t> trial_division_wheel(uint64_t size, uint64_t wheel_size, uint64_t* time) {
     wheel_return_t wheeldata = generate_wheel_steps(wheel_size);
     std::vector<uint64_t> primes = wheeldata.primes;
     std::vector<uint64_t> wheel_steps = wheeldata.wheel_steps;
@@ -146,22 +147,22 @@ std::vector<uint64_t> trial_division_naive_wheel(int size, int wheel_size, uint6
     return primes;
 }
 
-void test_trial_division_naive_wheel(int n, int wheel){
+void test_trial_division_wheel(uint64_t n, uint64_t wheel){
     std::vector<uint64_t> f(n);
     std::vector<uint64_t> t(n);
-    for(int w = 7; w < wheel; w++){
-        std::ofstream outfile("results/trial_division_naive_wheel" + std::to_string(w) + ".csv");
+    for(uint64_t w = 7; w < wheel; w++){
+        std::ofstream outfile("results/trial_division_wheel" + std::to_string(w) + ".csv");
 
         outfile << "first n primes,";
-        for(int i = 0; i < 10; i++){
+        for(uint64_t i = 0; i < 10; i++){
             outfile << i << ", ";
         }
         outfile << "\n";
 
-        for(int i = 0; i < n; i++){
+        for(uint64_t i = 0; i < n; i++){
             outfile << "10^" << i << ",";
-            for(int j = 0; j < 10; j++){
-                auto a = trial_division_naive_wheel(int(pow(10, i)), w, &t[i]);
+            for(uint64_t j = 0; j < 10; j++){
+                auto a = trial_division_wheel(uint64_t(pow(10, i)), w, &t[i]);
                 std::cout << "Time: " << t[i] << "us" << std::endl;
                 outfile << t[i] << ",";
             }
@@ -172,10 +173,29 @@ void test_trial_division_naive_wheel(int n, int wheel){
     return;
 }
 
-int main(){
+std::vector<uint64_t> miller_rabin_naive(uint64_t size, uint64_t k, uint64_t* time){
+
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<uint64_t> dis;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    for(uint64_t i = 0; i < size; i++){
+        for(uint64_t j = 0; j < k; j++){
+            uint64_t a = (dis(gen) % (i - 3)) + 1;
+        }
+    }
+
+    int64_t duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
+
+    if(time){*time = duration;}
+}
+
+uint64_t main(){
     // test_trial_division_naive(8);
-    // for(int i = 0; i <= 8; i++){
-    //     test_trial_division_naive_wheel(8, i);
+    // for(uint64_t i = 0; i <= 8; i++){
+    //     test_trial_division_wheel(8, i);
     // }
     
     return 0;
