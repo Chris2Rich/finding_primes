@@ -143,7 +143,7 @@ std::vector<uint64_t> trial_division_wheel(uint64_t size, uint64_t wheel_size, u
 void test_trial_division_wheel(uint64_t n, uint64_t wheel){
     std::vector<uint64_t> f(n);
     std::vector<uint64_t> t(n);
-    for(uint64_t w = 7; w < wheel; w++){
+    for(uint64_t w = 1; w < wheel; w++){
         std::ofstream outfile("results/trial_division_wheel" + std::to_string(w) + ".csv");
 
         outfile << "first n primes,";
@@ -290,28 +290,30 @@ std::vector<uint64_t> miller_rabin_wheel(uint64_t size, uint64_t k, uint64_t whe
 }
 
 void test_miller_rabin_wheel(uint64_t n, uint64_t wheel_size){
-    std::vector<uint64_t> f(n);
-    std::vector<uint64_t> t(n);
-    std::ofstream outfile("results/miller_rabin_wheel.csv");
+    for(int w = 1; w < wheel_size; w++){
+        std::vector<uint64_t> f(n);
+        std::vector<uint64_t> t(n);
+        std::ofstream outfile("results/miller_rabin_wheel" + std::to_string(w) + ".csv");
 
-    outfile << "first n primes,";
-    for(uint64_t i = 0; i < 10; i++){
-        outfile << i << ", ";
-    }
-    outfile << "\n";
-
-    for(uint64_t i = 1; i < n; i++){
-        outfile << "10^" << i << ",";
-        for(uint64_t j = 0; j < 10; j++){
-            //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
-            // total generated is 111111110
-            //k = ln(0.001 * (1/111111110))/ln(1/4) = 18.34 rounds
-            miller_rabin_wheel(uint64_t(pow(10, i)), 19, wheel_size, &t[i]);
-            std::cout << "Time: " << t[i] << "us" << std::endl;
-            outfile << t[i] << ",";
+        outfile << "first n primes,";
+        for(uint64_t i = 0; i < 10; i++){
+            outfile << i << ", ";
         }
+        outfile << "\n";
 
-        outfile << std::endl;
+        for(uint64_t i = 1; i < n; i++){
+            outfile << "10^" << i << ",";
+            for(uint64_t j = 0; j < 10; j++){
+                //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
+                // total generated is 111111110
+                //k = ln(0.001 * (1/111111110))/ln(1/4) = 18.34 rounds
+                miller_rabin_wheel(uint64_t(pow(10, i)), 19, w, &t[i]);
+                std::cout << "Time: " << t[i] << "us" << std::endl;
+                outfile << t[i] << ",";
+            }
+
+            outfile << std::endl;
+        }
     }
     return;
 }
@@ -366,26 +368,29 @@ std::vector<uint64_t> miller_rabin_wheel_optimized(uint64_t size, uint64_t wheel
 }
 
 void test_miller_rabin_wheel_optimized(uint64_t n, uint64_t wheel_size){
-    std::vector<uint64_t> f(n);
-    std::vector<uint64_t> t(n);
-    std::ofstream outfile("results/miller_rabin_wheel_optimized.csv");
+    for(uint64_t w = 1; w < wheel_size; w++){
+        std::vector<uint64_t> f(n);
+        std::vector<uint64_t> t(n);
+        std::ofstream outfile("results/miller_rabin_wheel" + std::to_string(w) + "_optimized.csv");
 
-    outfile << "first n primes,";
-    for(uint64_t i = 0; i < 10; i++){
-        outfile << i << ", ";
-    }
-    outfile << "\n";
-
-    for(uint64_t i = 1; i < n; i++){
-        outfile << "10^" << i << ",";
-        for(uint64_t j = 0; j < 10; j++){
-            miller_rabin_wheel_optimized(uint64_t(pow(10, i)), wheel_size, &t[i]);
-            std::cout << "Time: " << t[i] << "us" << std::endl;
-            outfile << t[i] << ",";
+        outfile << "first n primes,";
+        for(uint64_t i = 0; i < 10; i++){
+            outfile << i << ", ";
         }
+        outfile << "\n";
 
-        outfile << std::endl;
+        for(uint64_t i = 1; i < n; i++){
+            outfile << "10^" << i << ",";
+            for(uint64_t j = 0; j < 10; j++){
+                miller_rabin_wheel_optimized(uint64_t(pow(10, i)), w, &t[i]);
+                std::cout << "Time: " << t[i] << "us" << std::endl;
+                outfile << t[i] << ",";
+            }
+
+            outfile << std::endl;
+        }
     }
+    std::cout << "done" << std::endl;
     return;
 }
 
@@ -396,6 +401,6 @@ int main(){
     // }
     // test_miller_rabin_naive(8);
     // test_miller_rabin_wheel(8, 6);
-    test_miller_rabin_wheel_optimized(8, 6);
+    // test_miller_rabin_wheel_optimized(8, 6);
     return 0;
 }
