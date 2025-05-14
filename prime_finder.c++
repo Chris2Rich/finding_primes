@@ -1,11 +1,4 @@
-#include <vector>
-#include <random> 
-#include <cstdint>
-#include <cmath>
-#include <chrono>
-
-#include <iostream>
-#include <fstream>
+#include <bits/stdc++.h>
 
 std::vector<uint64_t> trial_division_naive(uint64_t size, uint64_t* time) {
     std::vector<uint64_t> primes;
@@ -173,30 +166,63 @@ void test_trial_division_wheel(uint64_t n, uint64_t wheel){
     return;
 }
 
+uint64_t expmod(uint64_t base, uint64_t exponent, uint64_t mod){
+
+}
+
+bool miller_rabin_logic(uint64_t candidate, uint64_t s, uint64_t d, uint64_t k, std::mt19937_64 gen, std::uniform_int_distribution<uint64_t> dis){
+    for(uint64_t i = 0; i < k; i++){
+        uint64_t a = (dis(gen) % (candidate - 3)) + 1;
+        uint64_t x = expmod(a, d, candidate);
+        uint64_t y = 0;
+        for(int64_t j = 0; j < s; j++){
+            y = __uint128_t(x*x) % candidate;
+            if(y == 1 && x != 1 && x != (candidate - 1)){
+                return false;
+            }
+            x = y;
+        }
+        if(y != 1){
+            return false;
+        }
+    }
+    return true;
+}
+
 std::vector<uint64_t> miller_rabin_naive(uint64_t size, uint64_t k, uint64_t* time){
 
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<uint64_t> dis;
+    std::vector<uint64_t> primes = {2};
 
     auto start_time = std::chrono::high_resolution_clock::now();
+    uint64_t candidate = 3;
 
-    for(uint64_t i = 0; i < size; i++){
-        for(uint64_t j = 0; j < k; j++){
-            uint64_t a = (dis(gen) % (i - 3)) + 1;
+    while(candidate <= size){
+        uint64_t s = __builtin_ctzll(candidate);
+        uint64_t d = candidate / s;
+
+        if(miller_rabin_logic(candidate, s, d, k, gen , dis)){
+            primes.emplace_back(candidate);
         }
+        candidate += 2;
     }
 
     int64_t duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
 
     if(time){*time = duration;}
+    return primes;
 }
 
-uint64_t main(){
+int main(){
     // test_trial_division_naive(8);
     // for(uint64_t i = 0; i <= 8; i++){
     //     test_trial_division_wheel(8, i);
     // }
-    
+    std::vector<uint64_t> res = miller_rabin_naive(8, 10, nullptr);
+    for(auto x: res){
+        std::cout << x << "\n";
+    }
     return 0;
 }
