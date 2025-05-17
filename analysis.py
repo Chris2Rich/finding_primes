@@ -3,7 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-results_dir = "results"
+results_dir = "times"
 files = [f for f in os.listdir(results_dir) if f.endswith(".csv")]
 
 plt.figure(figsize=(12, 7))
