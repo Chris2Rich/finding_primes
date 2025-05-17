@@ -399,7 +399,7 @@ int main(){
     // for(uint64_t i = 0; i <= 8; i++){
     //     test_trial_division_wheel(8, i);
     // }
-    // test_miller_rabin_naive(8);
+    test_miller_rabin_naive(8);
     // test_miller_rabin_wheel(8, 6);
     // test_miller_rabin_wheel_optimized(8, 6);
     return 0;
