@@ -366,7 +366,7 @@ int main(int argc, char** argv){
         return 1;
     }
 
-    uint64_t thread = std::atoi(argv[0]);
+    uint64_t thread = std::atoi(argv[1]);
     uint64_t n = 9;
     uint64_t wheel_size = 9;
 
