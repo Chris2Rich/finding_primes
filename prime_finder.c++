@@ -33,28 +33,19 @@ std::vector<uint64_t> trial_division_naive(uint64_t size, uint64_t* time) {
     return primes;
 }
 
-void test_trial_division_naive(uint64_t n){
+void test_trial_division_naive(uint64_t n, int thread){
     std::vector<uint64_t> f(n);
     std::vector<uint64_t> t(n);
-    std::ofstream outfile("times/trial_division_naive.csv");
-    std::ofstream res("results/restrial_division_naive.res");
-
-    outfile << "first n primes,";
-    for(uint64_t i = 0; i < 5; i++){
-        outfile << i << ", ";
-    }
-    outfile << "\n";
+    std::filesystem::create_directories("times/trial_division_naive");
+    std::ofstream outfile("times/trial_division_naive/" + std::to_string(thread) + ".csv");
+    outfile << "first n primes,\n";
 
     for(uint64_t i = 1; i < n; i++){
         outfile << "10^" << i << ",";
-        for(uint64_t j = 0; j < 5; j++){
-            trial_division_naive(uint64_t(pow(10, i)), &t[i]);
-            // for(auto x: trial_division_naive(uint64_t(pow(10, i)), &t[i])){res << x << "\n";}
-            std::cout << "Time: " << t[i] << "us" << std::endl;
-            outfile << t[i] << ",";
-        }
+        trial_division_naive(uint64_t(pow(10, i)), &t[i]);
+        std::cout << "Time: " << t[i] << "us" << std::endl;
+        outfile << t[i] << std::endl;
 
-        outfile << std::endl;
     }
     return;
 }
@@ -142,29 +133,19 @@ std::vector<uint64_t> trial_division_wheel(uint64_t size, uint64_t wheel_size, u
     return primes;
 }
 
-void test_trial_division_wheel(uint64_t n, uint64_t wheel){
+void test_trial_division_wheel(uint64_t n, uint64_t wheel, int thread){
     std::vector<uint64_t> f(n);
     std::vector<uint64_t> t(n);
     for(uint64_t w = 2; w < wheel; w++){
-        std::ofstream outfile("times/trial_division_wheel" + std::to_string(w) + ".csv");
-        std::ofstream res("results/restrial_division_wheel" + std::to_string(w) + ".res");
-
-        outfile << "first n primes,";
-        for(uint64_t i = 0; i < 5; i++){
-            outfile << i << ", ";
-        }
-        outfile << "\n";
+        std::filesystem::create_directories("times/trial_division_wheel" + std::to_string(w));
+        std::ofstream outfile("times/trial_division_wheel" + std::to_string(w) + "/" + std::to_string(thread) + ".csv");
+        outfile << "first n primes,\n";
 
         for(uint64_t i = 1; i < n; i++){
             outfile << "10^" << i << ",";
-            for(uint64_t j = 0; j < 5; j++){
-                trial_division_wheel(uint64_t(pow(10, i)), w, &t[i]);
-                // for(auto x: trial_division_wheel(uint64_t(pow(10, i)), w, &t[i])){res << x << "\n";}
-                std::cout << "Time: " << t[i] << "us" << std::endl;
-                outfile << t[i] << ",";
-            }
-
-            outfile << std::endl;
+            trial_division_wheel(uint64_t(pow(10, i)), w, &t[i]);
+            std::cout << "Time: " << t[i] << "us" << std::endl;
+            outfile << t[i] << std::endl;
         }
     }
     return;
@@ -233,31 +214,21 @@ std::vector<uint64_t> miller_rabin_naive(uint64_t size, uint64_t k, uint64_t* ti
     return primes;
 }
 
-void test_miller_rabin_naive(uint64_t n){
+void test_miller_rabin_naive(uint64_t n, int thread){
     std::vector<uint64_t> f(n);
     std::vector<uint64_t> t(n);
-    std::ofstream outfile("times/miller_rabin_naive.csv");
-    std::ofstream res("results/resmiller_rabin_naive.res");
-
-    outfile << "first n primes,";
-    for(uint64_t i = 0; i < 5; i++){
-        outfile << i << ", ";
-    }
-    outfile << "\n";
+    std::filesystem::create_directories("times/miller_rabin_naive");
+    std::ofstream outfile("times/miller_rabin_naive/" + std::to_string(thread) + ".csv");
+    outfile << "first n primes,\n";
 
     for(uint64_t i = 1; i < n; i++){
         outfile << "10^" << i << ",";
-        for(uint64_t j = 0; j < 5; j++){
-            //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
-            // total generated is 1111111110
-            //k = ln(0.001 * (1/1111111110))/ln(1/4) = 20.007 rounds
-            miller_rabin_naive(uint64_t(pow(10, i)), 20, &t[i]);
-            // for(auto x: miller_rabin_naive(uint64_t(pow(10, i)), 20, &t[i])){res << x << "\n";}
-            std::cout << "Time: " << t[i] << "us" << std::endl;
-            outfile << t[i] << ",";
-        }
-
-        outfile << std::endl;
+        //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
+        // total generated is 1111111110
+        //k = ln(0.001 * (1/1111111110))/ln(1/4) = 20.007 rounds
+        miller_rabin_naive(uint64_t(pow(10, i)), 20, &t[i]);
+        std::cout << "Time: " << t[i] << "us" << std::endl;
+        outfile << t[i] << std::endl;
     }
     return;
 }
@@ -295,32 +266,22 @@ std::vector<uint64_t> miller_rabin_wheel(uint64_t size, uint64_t k, uint64_t whe
     return primes;
 }
 
-void test_miller_rabin_wheel(uint64_t n, uint64_t wheel_size){
+void test_miller_rabin_wheel(uint64_t n, uint64_t wheel_size, int thread){
     for(int w = 2; w < wheel_size; w++){
         std::vector<uint64_t> f(n);
         std::vector<uint64_t> t(n);
-        std::ofstream outfile("times/miller_rabin_wheel" + std::to_string(w) + ".csv");
-        std::ofstream res("results/resmiller_rabin_wheel" + std::to_string(w) + ".res");
-
-        outfile << "first n primes,";
-        for(uint64_t i = 0; i < 5; i++){
-            outfile << i << ", ";
-        }
-        outfile << "\n";
+        std::filesystem::create_directories("times/miller_rabin_wheel" + std::to_string(w));
+        std::ofstream outfile("times/miller_rabin_wheel" + std::to_string(w) + "/" + std::to_string(thread) + ".csv");
+        outfile << "first n primes,\n";
 
         for(uint64_t i = 1; i < n; i++){
             outfile << "10^" << i << ",";
-            for(uint64_t j = 0; j < 5; j++){
-                //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
-                // total generated is 111111110
-                //k = ln(0.001 * (1/111111110))/ln(1/4) = 18.34 rounds
-                miller_rabin_wheel(uint64_t(pow(10, i)), 19, w, &t[i]);
-                // for(auto x: miller_rabin_wheel(uint64_t(pow(10, i)), 19, w, &t[i])){res << x << "\n";}
-                std::cout << "Time: " << t[i] << "us" << std::endl;
-                outfile << t[i] << ",";
-            }
-
-            outfile << std::endl;
+            //P(false positive) = (1/4)^k. chance of error in ENTIRE test should be 0.1%
+            // total generated is 111111110
+            //k = ln(0.001 * (1/111111110))/ln(1/4) = 18.34 rounds
+            miller_rabin_wheel(uint64_t(pow(10, i)), 19, w, &t[i]);
+            std::cout << "Time: " << t[i] << "us" << std::endl;
+            outfile << t[i] << std::endl;
         }
     }
     return;
@@ -376,43 +337,45 @@ std::vector<uint64_t> miller_rabin_wheel_optimized(uint64_t size, uint64_t wheel
     return primes;
 }
 
-void test_miller_rabin_wheel_optimized(uint64_t n, uint64_t wheel_size){
+void test_miller_rabin_wheel_optimized(uint64_t n, uint64_t wheel_size, int thread){
     for(uint64_t w = 2; w < wheel_size; w++){
         std::vector<uint64_t> f(n);
         std::vector<uint64_t> t(n);
-        std::ofstream outfile("times/miller_rabin_wheel" + std::to_string(w) + "_optimized.csv");
-        std::ofstream res("results/resmiller_rabin_wheel" + std::to_string(w) + "_optimized.res");
-
-        outfile << "first n primes,";
-        for(uint64_t i = 0; i < 5; i++){
-            outfile << i << ", ";
-        }
-        outfile << "\n";
+        std::filesystem::create_directories("times/miller_rabin_wheel" + std::to_string(w) + "_optimized");
+        std::ofstream outfile("times/miller_rabin_wheel" + std::to_string(w) + "_optimized/" + std::to_string(thread) + ".csv");
+        outfile << "first n primes,\n";
 
         for(uint64_t i = 1; i < n; i++){
             outfile << "10^" << i << ",";
-            for(uint64_t j = 0; j < 5; j++){
-                miller_rabin_wheel_optimized(uint64_t(pow(10, i)), w, &t[i]);
-                // for(auto x: miller_rabin_wheel_optimized(uint64_t(pow(10, i)), w, &t[i])){res << x  << "\n";}
-                std::cout << "Time: " << t[i] << "us" << std::endl;
-                outfile << t[i] << ","; 
-            }
-
-            outfile << std::endl;
+            miller_rabin_wheel_optimized(uint64_t(pow(10, i)), w, &t[i]);
+            std::cout << "Time: " << t[i] << "us" << std::endl;
+            outfile << t[i] << std::endl;
         }
     }
     std::cout << "done" << std::endl;
     return;
 }
 
-int main(){
+int main(int argc, char** argv){
+    if(argc != 2){
+        if(argc > 2){
+            std::cout << "Too many values given";
+        } else {
+            std::cout << "No thread specified.";
+        }
+        return 1;
+    }
+
+    uint64_t thread = std::atoi(argv[0]);
     uint64_t n = 9;
     uint64_t wheel_size = 9;
+
+    std::filesystem::create_directories("times");
     
-    test_trial_division_naive(n);
-    test_miller_rabin_naive(n);
-    test_trial_division_wheel(n, wheel_size);
-    test_miller_rabin_wheel(n, wheel_size);
-    test_miller_rabin_wheel_optimized(n, wheel_size);
+    test_trial_division_naive(n, thread);
+    test_miller_rabin_naive(n, thread);
+    test_trial_division_wheel(n, wheel_size, thread);
+    test_miller_rabin_wheel(n, wheel_size, thread);
+    test_miller_rabin_wheel_optimized(n, wheel_size, thread);
     return 0;
 }
