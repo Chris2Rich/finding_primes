@@ -24,7 +24,7 @@ std::vector<uint64_t> trial_division_naive(uint64_t size, uint64_t* time) {
             primes.emplace_back(candidate);
         }
 
-        candidate += 1;
+        candidate += 2;
     }
 
     int64_t duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_time).count();
@@ -326,6 +326,7 @@ void test_miller_rabin_wheel(uint64_t n, uint64_t wheel_size){
     return;
 }
 
+//works for candidate n where n < 341,550,071,728,321 (3.4 x 10^14)
 bool miller_rabin_logic_optimized(uint64_t candidate, uint64_t s, uint64_t d){
     std::vector<uint64_t> bases = {2, 3, 5, 7, 11, 13, 17};
     for(uint64_t i = 0; i < 7; i++){
@@ -405,8 +406,8 @@ void test_miller_rabin_wheel_optimized(uint64_t n, uint64_t wheel_size){
 }
 
 int main(){
-    uint64_t n = 4;
-    uint64_t wheel_size = 4;
+    uint64_t n = 9;
+    uint64_t wheel_size = 9;
     
     test_trial_division_naive(n);
     test_miller_rabin_naive(n);
