@@ -367,14 +367,14 @@ int main(int argc, char** argv){
     }
 
     uint64_t thread = std::atoi(argv[1]);
-    uint64_t n = 9;
+    uint64_t n = 8;
     uint64_t wheel_size = 9;
 
     std::filesystem::create_directories("times");
 
-    //test_trial_division_naive(n, thread);
-    //test_miller_rabin_naive(n, thread);
-    //test_trial_division_wheel(n, wheel_size, thread);
+    test_trial_division_naive(n, thread);
+    test_miller_rabin_naive(n, thread);
+    test_trial_division_wheel(n, wheel_size, thread);
     test_miller_rabin_wheel_optimized(n, wheel_size, thread);
     test_miller_rabin_wheel(n, wheel_size, thread);
     return 0;
